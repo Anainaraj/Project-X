@@ -5,6 +5,7 @@ export type AppErrorCode =
   | 'AUTH_SESSION_EXPIRED'
   | 'DRIVE_ERROR'
   | 'UPLOAD_INVALID_FILE'
+  | 'SHEETS_ERROR'
   | 'UNKNOWN'
 
 export interface AppError {
