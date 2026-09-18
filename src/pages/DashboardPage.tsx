@@ -1,7 +1,9 @@
 import { useAuth } from '../hooks/useAuth'
+import { useAppFolder } from '../hooks/useAppFolder'
 
 export function DashboardPage() {
   const { user, signOut } = useAuth()
+  const { status: folderStatus, error: folderError, retry: retryFolder } = useAppFolder()
 
   return (
     <main className="dashboard-page">
@@ -15,7 +17,19 @@ export function DashboardPage() {
           Sign out
         </button>
       </header>
-      <p>Drive folder setup comes next.</p>
+
+      {folderStatus === 'loading' && <p>Setting up your Drive folder…</p>}
+
+      {folderStatus === 'error' && folderError && (
+        <div role="alert" className="dashboard-page__error">
+          <p>{folderError.message}</p>
+          <button type="button" onClick={retryFolder}>
+            Try again
+          </button>
+        </div>
+      )}
+
+      {folderStatus === 'ready' && <p>Drive folder ready. Upload comes next.</p>}
     </main>
   )
 }

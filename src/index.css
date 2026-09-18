@@ -61,3 +61,10 @@ button:disabled {
   font-size: 0.8rem;
   margin: 0;
 }
+
+.dashboard-page__error {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #b3261e;
+}

@@ -3,6 +3,7 @@ export type AppErrorCode =
   | 'AUTH_ACCESS_DENIED'
   | 'AUTH_FAILED'
   | 'AUTH_SESSION_EXPIRED'
+  | 'DRIVE_ERROR'
   | 'UNKNOWN'
 
 export interface AppError {
