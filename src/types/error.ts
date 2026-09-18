@@ -4,6 +4,7 @@ export type AppErrorCode =
   | 'AUTH_FAILED'
   | 'AUTH_SESSION_EXPIRED'
   | 'DRIVE_ERROR'
+  | 'UPLOAD_INVALID_FILE'
   | 'UNKNOWN'
 
 export interface AppError {

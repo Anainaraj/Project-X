@@ -1,9 +1,12 @@
 import { useAuth } from '../hooks/useAuth'
 import { useAppFolder } from '../hooks/useAppFolder'
+import { usePhotoUpload } from '../hooks/usePhotoUpload'
+import { PhotoUploader } from '../components/PhotoUploader'
 
 export function DashboardPage() {
   const { user, signOut } = useAuth()
-  const { status: folderStatus, error: folderError, retry: retryFolder } = useAppFolder()
+  const { status: folderStatus, folderId, error: folderError, retry: retryFolder } = useAppFolder()
+  const { items, uploadFiles } = usePhotoUpload(folderId)
 
   return (
     <main className="dashboard-page">
@@ -29,7 +32,12 @@ export function DashboardPage() {
         </div>
       )}
 
-      {folderStatus === 'ready' && <p>Drive folder ready. Upload comes next.</p>}
+      {folderStatus === 'ready' && (
+        <PhotoUploader
+          items={items}
+          onFilesSelected={(files) => void uploadFiles(files)}
+        />
+      )}
     </main>
   )
 }
