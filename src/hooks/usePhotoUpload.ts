@@ -6,6 +6,7 @@ import {
   uploadPhotoToFolder,
 } from '../services/driveService'
 import { extractExifData } from '../services/exifService'
+import { logPhoto } from '../services/sheetsService'
 import { validateImageFile } from '../utils/fileValidation'
 import type { AppError } from '../types/error'
 import type { PhotoRecord } from '../types/photo'
@@ -27,7 +28,7 @@ function createId(): string {
     : `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-export function usePhotoUpload(folderId: string | null) {
+export function usePhotoUpload(folderId: string | null, spreadsheetId: string | null) {
   const { getAccessToken } = useAuth()
   const [items, setItems] = useState<UploadItem[]>([])
 
@@ -104,12 +105,31 @@ export function usePhotoUpload(folderId: string | null) {
           }
 
           updateItem(id, { status: 'success', progress: 100, result })
+
+          // The Drive upload is the primary success signal; a logging
+          // failure shouldn't retroactively mark the upload as failed. Errors
+          // here are visible in the console for debugging during development.
+          if (spreadsheetId) {
+            try {
+              await logPhoto(accessToken, spreadsheetId, {
+                fileId: result.fileId,
+                name: result.name,
+                webViewLink: result.webViewLink,
+                latitude: result.latitude,
+                longitude: result.longitude,
+                captureTimestamp: result.captureTimestamp,
+                uploadedAt: result.uploadedAt,
+              })
+            } catch (logErr) {
+              console.error('Failed to log photo to sheet:', logErr)
+            }
+          }
         } catch (err) {
           updateItem(id, { status: 'error', error: err as AppError })
         }
       }
     },
-    [folderId, getAccessToken, updateItem],
+    [folderId, spreadsheetId, getAccessToken, updateItem],
   )
 
   return { items, uploadFiles }

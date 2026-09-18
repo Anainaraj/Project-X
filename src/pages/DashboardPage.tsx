@@ -1,12 +1,19 @@
 import { useAuth } from '../hooks/useAuth'
 import { useAppFolder } from '../hooks/useAppFolder'
+import { useAppSpreadsheet } from '../hooks/useAppSpreadsheet'
 import { usePhotoUpload } from '../hooks/usePhotoUpload'
 import { PhotoUploader } from '../components/PhotoUploader'
 
 export function DashboardPage() {
   const { user, signOut } = useAuth()
   const { status: folderStatus, folderId, error: folderError, retry: retryFolder } = useAppFolder()
-  const { items, uploadFiles } = usePhotoUpload(folderId)
+  const {
+    status: sheetStatus,
+    spreadsheetId,
+    error: sheetError,
+    retry: retrySheet,
+  } = useAppSpreadsheet(folderId)
+  const { items, uploadFiles } = usePhotoUpload(folderId, spreadsheetId)
 
   return (
     <main className="dashboard-page">
@@ -32,11 +39,19 @@ export function DashboardPage() {
         </div>
       )}
 
-      {folderStatus === 'ready' && (
-        <PhotoUploader
-          items={items}
-          onFilesSelected={(files) => void uploadFiles(files)}
-        />
+      {folderStatus === 'ready' && sheetStatus === 'loading' && <p>Setting up your photo log…</p>}
+
+      {folderStatus === 'ready' && sheetStatus === 'error' && sheetError && (
+        <div role="alert" className="dashboard-page__error">
+          <p>{sheetError.message}</p>
+          <button type="button" onClick={retrySheet}>
+            Try again
+          </button>
+        </div>
+      )}
+
+      {folderStatus === 'ready' && sheetStatus === 'ready' && (
+        <PhotoUploader items={items} onFilesSelected={(files) => void uploadFiles(files)} />
       )}
     </main>
   )

@@ -3,6 +3,7 @@ import type { AppError } from '../types/error'
 const DRIVE_FILES_URL = 'https://www.googleapis.com/drive/v3/files'
 const DRIVE_UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v3/files'
 const FOLDER_MIME_TYPE = 'application/vnd.google-apps.folder'
+const SPREADSHEET_MIME_TYPE = 'application/vnd.google-apps.spreadsheet'
 
 interface DriveFile {
   id: string
@@ -103,6 +104,57 @@ export async function getOrCreateAppFolder(accessToken: string, name: string): P
     return existingId
   }
   return createFolder(accessToken, name)
+}
+
+/**
+ * Looks for a non-trashed spreadsheet inside a specific folder. Scoped by
+ * both parent folder and mimeType so it can't match some unrelated
+ * spreadsheet elsewhere in Drive.
+ */
+export async function findSpreadsheetInFolder(
+  accessToken: string,
+  folderId: string,
+): Promise<string | null> {
+  const query = [
+    `'${escapeForDriveQuery(folderId)}' in parents`,
+    `mimeType='${SPREADSHEET_MIME_TYPE}'`,
+    'trashed=false',
+  ].join(' and ')
+
+  const params = new URLSearchParams({
+    q: query,
+    fields: 'files(id,name)',
+    spaces: 'drive',
+    pageSize: '1',
+  })
+
+  const data = await driveFetch<DriveFileListResponse>(accessToken, `?${params.toString()}`)
+  return data.files[0]?.id ?? null
+}
+
+export async function createSpreadsheetInFolder(
+  accessToken: string,
+  folderId: string,
+  name: string,
+): Promise<string> {
+  const data = await driveFetch<DriveFile>(accessToken, '?fields=id', {
+    method: 'POST',
+    body: JSON.stringify({ name, mimeType: SPREADSHEET_MIME_TYPE, parents: [folderId] }),
+  })
+  return data.id
+}
+
+/** Finds the app's log spreadsheet inside a folder, creating it only if missing. */
+export async function getOrCreateAppSpreadsheet(
+  accessToken: string,
+  folderId: string,
+  name: string,
+): Promise<string> {
+  const existingId = await findSpreadsheetInFolder(accessToken, folderId)
+  if (existingId) {
+    return existingId
+  }
+  return createSpreadsheetInFolder(accessToken, folderId, name)
 }
 
 /** Lists the names of all non-trashed files directly inside a folder. */
