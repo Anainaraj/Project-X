@@ -12,13 +12,52 @@ body {
   min-height: 100vh;
 }
 
-.app-shell {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.6rem 1.1rem;
+  background: #1a73e8;
+  color: white;
+  border-color: #1a73e8;
 }
 
-.app-shell__status {
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-page,
+.dashboard-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+}
+
+.login-page__error {
+  color: #b3261e;
+  font-size: 0.95rem;
+}
+
+.login-page__note {
   color: #6b7280;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  margin-top: 2rem;
+}
+
+.dashboard-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-page__eyebrow {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin: 0;
 }
