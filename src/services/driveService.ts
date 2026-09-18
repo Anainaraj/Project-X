@@ -286,3 +286,25 @@ export function uploadPhotoToFolder(
     initXhr.send(JSON.stringify({ name: fileName, parents: [folderId] }))
   })
 }
+
+/**
+ * Downloads a file's raw bytes as a Blob using an explicit Authorization
+ * header (via fetch, not an <img> tag). Drive's `thumbnailLink` field is
+ * explicitly documented as unsuitable for direct web app usage due to CORS,
+ * so thumbnails are rendered from this authenticated fetch instead — the
+ * private file is never exposed via a public link.
+ */
+export async function fetchFileBlob(accessToken: string, fileId: string): Promise<Blob> {
+  const response = await fetch(`${DRIVE_FILES_URL}/${fileId}?alt=media`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+
+  if (!response.ok) {
+    throw toAppError(
+      `Could not load image (${response.status}).`,
+      await safeReadErrorBody(response),
+    )
+  }
+
+  return response.blob()
+}

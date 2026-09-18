@@ -1,58 +1,16 @@
-import { useAuth } from '../hooks/useAuth'
-import { useAppFolder } from '../hooks/useAppFolder'
-import { useAppSpreadsheet } from '../hooks/useAppSpreadsheet'
+import { useOutletContext } from 'react-router-dom'
 import { usePhotoUpload } from '../hooks/usePhotoUpload'
 import { PhotoUploader } from '../components/PhotoUploader'
+import type { AppOutletContext } from '../components/AppLayout'
 
 export function DashboardPage() {
-  const { user, signOut } = useAuth()
-  const { status: folderStatus, folderId, error: folderError, retry: retryFolder } = useAppFolder()
-  const {
-    status: sheetStatus,
-    spreadsheetId,
-    error: sheetError,
-    retry: retrySheet,
-  } = useAppSpreadsheet(folderId)
+  const { folderId, spreadsheetId } = useOutletContext<AppOutletContext>()
   const { items, uploadFiles } = usePhotoUpload(folderId, spreadsheetId)
 
   return (
-    <main className="dashboard-page">
-      <header className="dashboard-page__header">
-        <div>
-          <p className="dashboard-page__eyebrow">Signed in as</p>
-          <strong>{user?.name}</strong>
-          <p>{user?.email}</p>
-        </div>
-        <button type="button" onClick={() => void signOut()}>
-          Sign out
-        </button>
-      </header>
-
-      {folderStatus === 'loading' && <p>Setting up your Drive folder…</p>}
-
-      {folderStatus === 'error' && folderError && (
-        <div role="alert" className="dashboard-page__error">
-          <p>{folderError.message}</p>
-          <button type="button" onClick={retryFolder}>
-            Try again
-          </button>
-        </div>
-      )}
-
-      {folderStatus === 'ready' && sheetStatus === 'loading' && <p>Setting up your photo log…</p>}
-
-      {folderStatus === 'ready' && sheetStatus === 'error' && sheetError && (
-        <div role="alert" className="dashboard-page__error">
-          <p>{sheetError.message}</p>
-          <button type="button" onClick={retrySheet}>
-            Try again
-          </button>
-        </div>
-      )}
-
-      {folderStatus === 'ready' && sheetStatus === 'ready' && (
-        <PhotoUploader items={items} onFilesSelected={(files) => void uploadFiles(files)} />
-      )}
-    </main>
+    <section aria-label="Upload photos">
+      <h2>Upload</h2>
+      <PhotoUploader items={items} onFilesSelected={(files) => void uploadFiles(files)} />
+    </section>
   )
 }
