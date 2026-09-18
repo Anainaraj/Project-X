@@ -130,3 +130,8 @@ button:disabled {
 .photo-uploader__status--error {
   color: #b3261e;
 }
+
+.photo-uploader__meta {
+  color: #6b7280;
+  font-weight: normal;
+}

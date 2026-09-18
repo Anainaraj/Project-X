@@ -5,6 +5,7 @@ import {
   resolveUniqueFileName,
   uploadPhotoToFolder,
 } from '../services/driveService'
+import { extractExifData } from '../services/exifService'
 import { validateImageFile } from '../utils/fileValidation'
 import type { AppError } from '../types/error'
 import type { PhotoRecord } from '../types/photo'
@@ -84,19 +85,22 @@ export function usePhotoUpload(folderId: string | null) {
         updateItem(id, { status: 'uploading', fileName: uniqueName })
 
         try {
-          const driveFile = await uploadPhotoToFolder(
-            accessToken,
-            folderId,
-            file,
-            uniqueName,
-            (progress) => updateItem(id, { progress }),
-          )
+          // Independent local/network operations on the same File — run together.
+          const [exifData, driveFile] = await Promise.all([
+            extractExifData(file),
+            uploadPhotoToFolder(accessToken, folderId, file, uniqueName, (progress) =>
+              updateItem(id, { progress }),
+            ),
+          ])
 
           const result: PhotoRecord = {
             fileId: driveFile.id,
             name: driveFile.name,
             webViewLink: driveFile.webViewLink,
             uploadedAt: new Date().toISOString(),
+            latitude: exifData.gps?.latitude,
+            longitude: exifData.gps?.longitude,
+            captureTimestamp: exifData.captureTimestamp?.toISOString(),
           }
 
           updateItem(id, { status: 'success', progress: 100, result })
