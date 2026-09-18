@@ -1,4 +1,5 @@
 import type { AppError } from '../types/error'
+import type { PhotoRecord } from '../types/photo'
 
 const SHEETS_BASE_URL = 'https://sheets.googleapis.com/v4/spreadsheets'
 const NOT_AVAILABLE = 'Not available'
@@ -12,6 +13,7 @@ const NOT_AVAILABLE = 'Not available'
 const HEADER_RANGE = 'A1:G1'
 const DATA_COLUMN_RANGE = 'A:G'
 const LOGGED_IDS_RANGE = 'A2:A'
+const DATA_ROWS_RANGE = 'A2:G'
 
 const HEADER_ROW = [
   'File ID',
@@ -143,4 +145,45 @@ export async function logPhoto(
       body: JSON.stringify({ values: [row] }),
     },
   )
+}
+
+function parseOptionalNumber(value: string | undefined): number | undefined {
+  if (!value || value === NOT_AVAILABLE) return undefined
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
+function parseOptionalString(value: string | undefined): string | undefined {
+  return value && value !== NOT_AVAILABLE ? value : undefined
+}
+
+/**
+ * Reads every logged photo back from the sheet — this is the Gallery's data
+ * source, since it needs to show photos from previous sessions too, not
+ * just what was uploaded in the current one.
+ */
+export async function listLoggedPhotos(
+  accessToken: string,
+  spreadsheetId: string,
+): Promise<PhotoRecord[]> {
+  const data = await sheetsFetch<{ values?: string[][] }>(
+    accessToken,
+    `/${spreadsheetId}/values/${encodeURIComponent(DATA_ROWS_RANGE)}`,
+  )
+
+  const rows = data.values ?? []
+  return rows
+    .filter((row) => Boolean(row[0]))
+    .map(
+      ([fileId, name, webViewLink, latitude, longitude, captureTimestamp, uploadedAt]): PhotoRecord => ({
+        fileId,
+        name: name ?? fileId,
+        webViewLink: parseOptionalString(webViewLink),
+        latitude: parseOptionalNumber(latitude),
+        longitude: parseOptionalNumber(longitude),
+        captureTimestamp: parseOptionalString(captureTimestamp),
+        uploadedAt: uploadedAt ?? '',
+      }),
+    )
+    .reverse() // newest upload first
 }
