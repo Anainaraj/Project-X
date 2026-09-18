@@ -74,7 +74,17 @@ export function PhotoUploader({ items, onFilesSelected, disabled }: PhotoUploade
                 </progress>
               )}
               {item.status === 'success' && (
-                <span className="photo-uploader__status">Uploaded</span>
+                <span className="photo-uploader__status">
+                  Uploaded
+                  {item.result && (
+                    <span className="photo-uploader__meta">
+                      {' · '}
+                      {item.result.latitude !== undefined && item.result.longitude !== undefined
+                        ? `${item.result.latitude.toFixed(5)}, ${item.result.longitude.toFixed(5)}`
+                        : 'No GPS data'}
+                    </span>
+                  )}
+                </span>
               )}
               {item.status === 'error' && item.error && (
                 <span
